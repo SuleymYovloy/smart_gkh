@@ -1,0 +1,6 @@
+flask
+flask-sqlalchemy
+flask-jwt-extended
+bcrypt
+pdfkit
+reportlab  # Для генерации PDF
