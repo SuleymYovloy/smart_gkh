@@ -1,13 +1,16 @@
-import { useKeycloak } from "@react-keycloak/web";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginPage from "./components/LoginPage";
+import Home from "./components/Home"; // создай его
 
-export default function App() {
-    const { keycloak } = useKeycloak();
-    if (!keycloak.authenticated) {
-        return (
-            <button onClick={() => keycloak.login({ prompt: "login" })}>
-                Войти
-            </button>
-        );
-    }
-    return <h1>Привет, {keycloak.tokenParsed.preferred_username}!</h1>;
+function App() {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<LoginPage />} />
+                <Route path="/home" element={<Home />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
+
+export default App;
