@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+python-keycloak
+sqlalchemy
+pydantic
+psycopg2-binary # драйвер PostgreSQL
