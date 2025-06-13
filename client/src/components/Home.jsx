@@ -25,20 +25,21 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { useKeycloak } from "@react-keycloak/web";
 
 const drawerWidth = 280;
 
 const navItems = [
-    { label: "Главная", icon: <HomeIcon /> },
-    { label: "Лицевые счета", icon: <AccountBalanceIcon /> },
-    { label: "Начисления", icon: <ReceiptIcon /> },
-    { label: "Оплата", icon: <PaymentIcon /> },
-    { label: "История", icon: <HistoryIcon /> },
-    { label: "Профиль", icon: <PersonIcon /> },
-    { label: "Настройки", icon: <SettingsIcon /> },
-    { label: "Выход", icon: <LogoutIcon /> }
+    { label: "Главная", icon: <HomeIcon />, path: "/home" },
+    { label: "Лицевые счета", icon: <AccountBalanceIcon />, path: "/accounts" },
+    { label: "Начисления", icon: <ReceiptIcon />, path: "/accruals" },
+    { label: "Оплата", icon: <PaymentIcon />, path: "/payment" },
+    { label: "История", icon: <HistoryIcon />, path: "/history" },
+    { label: "Профиль", icon: <PersonIcon />, path: "/profile" },
+    { label: "Настройки", icon: <SettingsIcon />, path: "/settings" },
+    { label: "Выход", icon: <LogoutIcon /> } // без path
 ];
 
 export default function HomePage() {
@@ -47,6 +48,8 @@ export default function HomePage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [activeItem, setActiveItem] = useState("Главная");
+    const navigate = useNavigate();
+    console.log(keycloak.idToken);
 
     const drawer = (
         <Box
@@ -100,7 +103,7 @@ export default function HomePage() {
             </Box>
 
             <List>
-                {navItems.map(({ label, icon }) => (
+                {navItems.map(({ label, icon, path }) => (
                     <React.Fragment key={label}>
                         <ListItem disablePadding>
                             <ListItemButton
@@ -108,13 +111,15 @@ export default function HomePage() {
                                 onClick={() => {
                                     if (label === "Выход") {
                                         keycloak.logout({
-                                            redirectUri:
-                                                window.location.origin + "/"
+                                            // ← куда вернёт после logout
+                                            redirectUri: `${window.location.origin}/`
                                         });
-                                    } else {
-                                        setActiveItem(label);
-                                        if (isMobile) setMobileOpen(false);
+                                        return; // дальше код не нужен
                                     }
+
+                                    setActiveItem(label);
+                                    if (path) navigate(path);
+                                    if (isMobile) setMobileOpen(false);
                                 }}
                                 sx={{
                                     px: 3,
