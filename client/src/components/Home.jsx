@@ -25,6 +25,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { useKeycloak } from "@react-keycloak/web";
@@ -35,11 +36,12 @@ const navItems = [
     { label: "Главная", icon: <HomeIcon />, path: "/home" },
     { label: "Лицевые счета", icon: <AccountBalanceIcon />, path: "/accounts" },
     { label: "Начисления", icon: <ReceiptIcon />, path: "/accruals" },
+    { label: "Заявки", icon: <AssignmentIcon />, path: "/tasks" },
     { label: "Оплата", icon: <PaymentIcon />, path: "/payment" },
     { label: "История", icon: <HistoryIcon />, path: "/history" },
     { label: "Профиль", icon: <PersonIcon />, path: "/profile" },
     { label: "Настройки", icon: <SettingsIcon />, path: "/settings" },
-    { label: "Выход", icon: <LogoutIcon /> } // без path
+    { label: "Выход", icon: <LogoutIcon /> }
 ];
 
 export default function HomePage() {
