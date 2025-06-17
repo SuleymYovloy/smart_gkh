@@ -27,6 +27,7 @@ import {
     DialogContent,
     DialogActions
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SendIcon from "@mui/icons-material/Send";
 import HistoryIcon from "@mui/icons-material/History";
@@ -68,7 +69,7 @@ export default function TasksPage() {
         role: "",
         id: ""
     });
-
+    const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -242,13 +243,20 @@ export default function TasksPage() {
     };
 
     return (
-        <Box
-            p={isMobile ? 2 : 4}
-            display="flex"
-            justifyContent="center"
-            sx={{ backgroundColor: "#f3f6f9", minHeight: "100vh" }}
-        >
-            <Box width="100%" maxWidth={750}>
+        <Box sx={{ bgcolor: "#f5f5f7", minHeight: "100vh" }}>
+            <Box
+                maxWidth={750}
+                display="flex"
+                flexDirection="column"
+                mx="auto"
+                p={3}
+            >
+                <Button
+                    sx={{ display: "flex", justifyContent: "flex-start" }}
+                    onClick={() => navigate("/home")}
+                >
+                    Назад
+                </Button>
                 <Typography
                     variant={isMobile ? "h5" : "h4"}
                     gutterBottom

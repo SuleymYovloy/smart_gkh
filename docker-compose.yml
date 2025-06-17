@@ -1,43 +1,43 @@
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
-    volumes:
-      - keycloak_db:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    db:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_DB: keycloak
+            POSTGRES_USER: keycloak
+            POSTGRES_PASSWORD: keycloak
+        volumes:
+            - keycloak_db:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0
-    command: start-dev --http-port 9080
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-      KEYCLOAK_IMPORT: /opt/keycloak/data/import/smart-hcs.json
-    volumes:
-      - ./smart-hcs.json:/opt/keycloak/data/import/smart-hcs.json
-    ports:
-      - "9080:9080"
-    depends_on:
-      - db
+    keycloak:
+        image: quay.io/keycloak/keycloak:24.0
+        command: start-dev --http-port 9080
+        environment:
+            KEYCLOAK_ADMIN: admin
+            KEYCLOAK_ADMIN_PASSWORD: admin
+            KC_DB: postgres
+            KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+            KC_DB_USERNAME: keycloak
+            KC_DB_PASSWORD: keycloak
+            KEYCLOAK_IMPORT: /opt/keycloak/data/import/smart-hcs.json
+        volumes:
+            - ./keycloak/smart-hcs.json:/opt/keycloak/data/import/smart-hcs.json
+        ports:
+            - "9080:9080"
+        depends_on:
+            - db
 
-  backend:                    # ⬅️ тот самый сервис
-    build:
-      context: ./backend      # путь к коду
-      dockerfile: Dockerfile
-    container_name: backend   # имя контейнера
-    depends_on:
-      - db
-      - keycloak
-    ports:
-      - "8000:8000"
+    backend:
+        build:
+            context: ./backend # путь к коду
+            dockerfile: Dockerfile
+        container_name: backend # имя контейнера
+        depends_on:
+            - db
+            - keycloak
+        ports:
+            - "8000:8000"
 
 volumes:
-  keycloak_db:
+    keycloak_db:
