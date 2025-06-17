@@ -20,15 +20,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useKeycloak } from "@react-keycloak/web";
 import { useNavigate } from "react-router-dom";
 
-/* -----------------------------------------
-   Настраиваем адрес бэкенда
-   ----------------------------------------- */
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 const ACCOUNT = "user1"; // демонстрационный пользователь
 
-/* -----------------------------------------
-   Услуги по‑умолчанию (можно заменить fetch`ом /services)
-   ----------------------------------------- */
 const startServices = [
     {
         id: "cold",
@@ -57,11 +51,9 @@ const startServices = [
 ];
 
 export default function PaymentPage() {
-    /* ───────── UI helpers */
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-    /* ───────── state */
     const [services, setServices] = useState(startServices);
     const [balance, setBalance] = useState(null); // null → ждём fetch
     const [snack, setSnack] = useState({
@@ -72,7 +64,6 @@ export default function PaymentPage() {
     const navigate = useNavigate();
     const { keycloak } = useKeycloak();
 
-    /* ───────── вычисляем сумму */
     const total = services.reduce((sum, s) => {
         const cur = parseFloat(s.current);
         return s.current && !isNaN(cur) && cur >= s.prev
@@ -172,7 +163,6 @@ export default function PaymentPage() {
         }
     };
 
-    /* ───────── render */
     return (
         <Box sx={{ bgcolor: "#f5f5f7", minHeight: "100vh", display: "flex" }}>
             <Box sx={{ flexGrow: 1, p: isMobile ? 2 : 4 }}>
@@ -200,12 +190,10 @@ export default function PaymentPage() {
                     </AppBar>
                 )}
 
-                {/* заголовок */}
                 <Typography variant="h5" mb={3}>
                     Оплата услуг
                 </Typography>
 
-                {/* карточка счёта */}
                 <Card sx={{ border: "1px solid #ccc", bgcolor: "#fff" }}>
                     <CardContent>
                         <Typography>Счёт №ХХХХХХХХХХ</Typography>
@@ -291,7 +279,6 @@ export default function PaymentPage() {
                     })}
                 </Grid>
 
-                {/* итог */}
                 <Card sx={{ border: "1px solid #ccc", bgcolor: "#fff", mt: 4 }}>
                     <CardContent>
                         <Typography fontWeight={500}>Итого к оплате</Typography>
@@ -302,7 +289,6 @@ export default function PaymentPage() {
                     </CardContent>
                 </Card>
 
-                {/* кнопки */}
                 <Box mt={3} display="flex" gap={2}>
                     <Button
                         variant="contained"

@@ -9,9 +9,11 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (keycloak.authenticated) {
+            // Сохраняем токен в localStorage
+            localStorage.setItem("token", keycloak.token);
             navigate("/home");
         }
-    }, [keycloak.authenticated, navigate]);
+    }, [keycloak.authenticated, keycloak.token, navigate]);
 
     if (!keycloak.authenticated) {
         return (
