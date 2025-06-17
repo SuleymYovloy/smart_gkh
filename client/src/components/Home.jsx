@@ -51,7 +51,7 @@ export default function HomePage() {
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [activeItem, setActiveItem] = useState("Главная");
     const navigate = useNavigate();
-    console.log(keycloak.idToken);
+    console.log(keycloak);
 
     const drawer = (
         <Box

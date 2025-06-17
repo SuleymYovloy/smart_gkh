@@ -21,12 +21,18 @@ import {
     Collapse,
     Rating,
     Tooltip,
-    IconButton
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SendIcon from "@mui/icons-material/Send";
 import HistoryIcon from "@mui/icons-material/History";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CommentIcon from "@mui/icons-material/Comment";
+import PersonIcon from "@mui/icons-material/Person";
 
 const categories = [
     { value: "plumbing", label: "Сантехника" },
@@ -35,6 +41,13 @@ const categories = [
     { value: "elevator", label: "Лифт" },
     { value: "other", label: "Другое" }
 ];
+
+const statusLabels = {
+    in_progress: "В работе",
+    pending: "Ожидает",
+    done: "Выполнено",
+    cancelled: "Отменено"
+};
 
 export default function TasksPage() {
     const [title, setTitle] = useState("");
@@ -45,12 +58,28 @@ export default function TasksPage() {
     const [expandedTaskId, setExpandedTaskId] = useState(null);
     const [rating, setRating] = useState({});
 
+    // Состояния для диалогов
+    const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+    const [assigneeDialogOpen, setAssigneeDialogOpen] = useState(false);
+    const [selectedTaskId, setSelectedTaskId] = useState(null);
+    const [newComment, setNewComment] = useState("");
+    const [assigneeData, setAssigneeData] = useState({
+        name: "",
+        role: "",
+        id: ""
+    });
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const fetchTasks = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/v1/tasks");
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:8000/api/v1/tasks", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             setTasks(data);
         } catch (error) {
@@ -64,10 +93,12 @@ export default function TasksPage() {
 
     const handleSubmit = async () => {
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch("http://localhost:8000/api/v1/tasks", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     title,
@@ -99,7 +130,10 @@ export default function TasksPage() {
                 `http://localhost:8000/api/v1/tasks/${taskId}/rate`,
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    },
                     body: JSON.stringify({ rating: value })
                 }
             );
@@ -110,6 +144,101 @@ export default function TasksPage() {
         } catch (error) {
             console.error("Ошибка при оценке:", error);
         }
+    };
+
+    const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `http://localhost:8000/api/v1/tasks/${selectedTaskId}/comments`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ comment: newComment })
+                }
+            );
+
+            if (response.ok) {
+                setNewComment("");
+                setCommentDialogOpen(false);
+                fetchTasks();
+                alert("Комментарий добавлен!");
+            } else {
+                alert("Ошибка при добавлении комментария");
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert("Произошла ошибка");
+        }
+    };
+
+    const handleUpdateAssignee = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `http://localhost:8000/api/v1/tasks/${selectedTaskId}/assignee`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        assignee_id: assigneeData.id,
+                        assignee_name: assigneeData.name,
+                        assignee_role: assigneeData.role
+                    })
+                }
+            );
+
+            if (response.ok) {
+                setAssigneeData({ name: "", role: "", id: "" });
+                setAssigneeDialogOpen(false);
+                fetchTasks();
+                alert("Исполнитель обновлен!");
+            } else {
+                alert("Ошибка при обновлении исполнителя");
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert("Произошла ошибка");
+        }
+    };
+
+    const openCommentDialog = (taskId) => {
+        setSelectedTaskId(taskId);
+        setCommentDialogOpen(true);
+    };
+
+    const openAssigneeDialog = (taskId, currentAssignee) => {
+        setSelectedTaskId(taskId);
+        setAssigneeData({
+            name: currentAssignee?.name || "",
+            role: currentAssignee?.role || "",
+            id: currentAssignee?.id || ""
+        });
+        setAssigneeDialogOpen(true);
+    };
+
+    const getActionLabel = (action) => {
+        const actionLabels = {
+            created: "Создана",
+            comment_added: "Добавлен комментарий",
+            assignee_updated: "Обновлен исполнитель",
+            rated: "Оценена",
+            status_changed_from_in_progress_to_done:
+                "Статус изменен: В работе → Выполнено",
+            status_changed_from_pending_to_in_progress:
+                "Статус изменен: Ожидает → В работе",
+            status_changed_from_in_progress_to_cancelled:
+                "Статус изменен: В работе → Отменено"
+        };
+        return actionLabels[action] || action;
     };
 
     return (
@@ -226,14 +355,19 @@ export default function TasksPage() {
                                         sx={{ cursor: "pointer" }}
                                     >
                                         <ListItemText
-                                            primary={`[${task.id}] ${task.title}`}
+                                            primary={`${task.title}`}
                                             secondary={`Счёт: ${
                                                 task.accountId
                                             } • Категория: ${
-                                                task.category
+                                                categories.find(
+                                                    (c) =>
+                                                        c.value ===
+                                                        task.category
+                                                )?.label || task.category
                                             } • Приоритет: ${
                                                 task.priority
                                             } • Статус: ${
+                                                statusLabels[task.status] ||
                                                 task.status
                                             } • ${new Date(
                                                 task.createdAt
@@ -253,7 +387,10 @@ export default function TasksPage() {
                                                     </Tooltip>
                                                 )}
                                             <Chip
-                                                label={task.status}
+                                                label={
+                                                    statusLabels[task.status] ||
+                                                    task.status
+                                                }
                                                 color="primary"
                                                 variant="outlined"
                                             />
@@ -266,6 +403,36 @@ export default function TasksPage() {
                                         unmountOnExit
                                     >
                                         <Box px={2} pb={2}>
+                                            <Stack
+                                                direction="row"
+                                                spacing={1}
+                                                mb={2}
+                                            >
+                                                <Button
+                                                    size="small"
+                                                    startIcon={<CommentIcon />}
+                                                    onClick={() =>
+                                                        openCommentDialog(
+                                                            task.id
+                                                        )
+                                                    }
+                                                >
+                                                    Добавить комментарий
+                                                </Button>
+                                                <Button
+                                                    size="small"
+                                                    startIcon={<PersonIcon />}
+                                                    onClick={() =>
+                                                        openAssigneeDialog(
+                                                            task.id,
+                                                            task.assignee
+                                                        )
+                                                    }
+                                                >
+                                                    Назначить исполнителя
+                                                </Button>
+                                            </Stack>
+
                                             <Typography
                                                 variant="subtitle2"
                                                 gutterBottom
@@ -306,6 +473,45 @@ export default function TasksPage() {
                                                     </Box>
                                                 )}
 
+                                            {/* Комментарии */}
+                                            {task.comments &&
+                                                task.comments.length > 0 && (
+                                                    <Box mb={2}>
+                                                        <Typography
+                                                            variant="subtitle2"
+                                                            gutterBottom
+                                                        >
+                                                            💬 Комментарии:
+                                                        </Typography>
+                                                        <List dense>
+                                                            {task.comments.map(
+                                                                (
+                                                                    comment,
+                                                                    i
+                                                                ) => (
+                                                                    <ListItem
+                                                                        key={i}
+                                                                        sx={{
+                                                                            pl: 0
+                                                                        }}
+                                                                    >
+                                                                        <ListItemText
+                                                                            primary={
+                                                                                comment.comment
+                                                                            }
+                                                                            secondary={`${new Date(
+                                                                                comment.timestamp
+                                                                            ).toLocaleString()} — ${
+                                                                                comment.user
+                                                                            }`}
+                                                                        />
+                                                                    </ListItem>
+                                                                )
+                                                            )}
+                                                        </List>
+                                                    </Box>
+                                                )}
+
                                             <Typography
                                                 variant="subtitle2"
                                                 gutterBottom
@@ -321,9 +527,14 @@ export default function TasksPage() {
                                                 <List dense>
                                                     {task.history.map(
                                                         (h, i) => (
-                                                            <ListItem key={i}>
+                                                            <ListItem
+                                                                key={i}
+                                                                sx={{ pl: 0 }}
+                                                            >
                                                                 <ListItemText
-                                                                    primary={`• ${h.action}`}
+                                                                    primary={`• ${getActionLabel(
+                                                                        h.action
+                                                                    )}`}
                                                                     secondary={`${new Date(
                                                                         h.timestamp
                                                                     ).toLocaleString()} — ${
@@ -344,26 +555,30 @@ export default function TasksPage() {
                                             )}
 
                                             <Divider sx={{ my: 2 }} />
-                                            <Typography
-                                                variant="body2"
-                                                gutterBottom
-                                            >
-                                                Оцените качество выполнения:
-                                            </Typography>
-                                            <Rating
-                                                name={`rating-${task.id}`}
-                                                value={
-                                                    task.rating ||
-                                                    rating[task.id] ||
-                                                    0
-                                                }
-                                                onChange={(event, newValue) =>
-                                                    handleRate(
-                                                        task.id,
-                                                        newValue
-                                                    )
-                                                }
-                                            />
+
+                                            {task.status === "done" && (
+                                                <Box>
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        gutterBottom
+                                                    >
+                                                        ⭐ Оценка работы:
+                                                    </Typography>
+                                                    <Rating
+                                                        value={
+                                                            task.rating ||
+                                                            rating[task.id] ||
+                                                            0
+                                                        }
+                                                        onChange={(_, value) =>
+                                                            handleRate(
+                                                                task.id,
+                                                                value
+                                                            )
+                                                        }
+                                                    />
+                                                </Box>
+                                            )}
                                         </Box>
                                     </Collapse>
                                 </Box>
@@ -371,6 +586,93 @@ export default function TasksPage() {
                         </List>
                     </Paper>
                 )}
+
+                {/* Диалог добавления комментария */}
+                <Dialog
+                    open={commentDialogOpen}
+                    onClose={() => setCommentDialogOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>Добавить комментарий</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            fullWidth
+                            multiline
+                            rows={4}
+                            label="Комментарий"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            sx={{ mt: 1 }}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setCommentDialogOpen(false)}>
+                            Отмена
+                        </Button>
+                        <Button onClick={handleAddComment} variant="contained">
+                            Добавить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Диалог назначения исполнителя */}
+                <Dialog
+                    open={assigneeDialogOpen}
+                    onClose={() => setAssigneeDialogOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>Назначить исполнителя</DialogTitle>
+                    <DialogContent>
+                        <Stack spacing={2} sx={{ mt: 1 }}>
+                            <TextField
+                                fullWidth
+                                label="ID исполнителя"
+                                value={assigneeData.id}
+                                onChange={(e) =>
+                                    setAssigneeData({
+                                        ...assigneeData,
+                                        id: e.target.value
+                                    })
+                                }
+                            />
+                            <TextField
+                                fullWidth
+                                label="Имя исполнителя"
+                                value={assigneeData.name}
+                                onChange={(e) =>
+                                    setAssigneeData({
+                                        ...assigneeData,
+                                        name: e.target.value
+                                    })
+                                }
+                            />
+                            <TextField
+                                fullWidth
+                                label="Роль/Должность"
+                                value={assigneeData.role}
+                                onChange={(e) =>
+                                    setAssigneeData({
+                                        ...assigneeData,
+                                        role: e.target.value
+                                    })
+                                }
+                            />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setAssigneeDialogOpen(false)}>
+                            Отмена
+                        </Button>
+                        <Button
+                            onClick={handleUpdateAssignee}
+                            variant="contained"
+                        >
+                            Назначить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Box>
     );
