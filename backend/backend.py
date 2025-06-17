@@ -1,4 +1,3 @@
-# backend.py (финальный MVP ЖКХ с услугами)
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -23,7 +22,6 @@ DATABASE_URL = "sqlite:///./tasks.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 
-# создаём таблицы, если их нет
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()

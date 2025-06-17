@@ -29,6 +29,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { useKeycloak } from "@react-keycloak/web";
+import { jwtDecode } from "jwt-decode";
 
 const drawerWidth = 280;
 
@@ -51,7 +52,13 @@ export default function HomePage() {
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [activeItem, setActiveItem] = useState("Главная");
     const navigate = useNavigate();
+    const token = localStorage.getItem("token");
     console.log(keycloak);
+    const decoded = jwtDecode(token);
+    const fullName = `${decoded.given_name || ""} ${
+        decoded.family_name || ""
+    }`.trim();
+    const email = decoded.email;
 
     const drawer = (
         <Box
@@ -84,10 +91,10 @@ export default function HomePage() {
                     USER
                 </Avatar>
                 <Typography variant="subtitle1" mt={1} fontWeight={500}>
-                    Имя Фамилия
+                    {fullName || "Пользователь"}
                 </Typography>
                 <Typography variant="caption" sx={{ color: "#1565c0" }}>
-                    email@example.com
+                    {email || "email@example.com"}
                 </Typography>
                 {isMobile && (
                     <IconButton
